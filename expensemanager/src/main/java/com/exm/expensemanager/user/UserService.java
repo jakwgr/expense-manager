@@ -1,12 +1,10 @@
 package com.exm.expensemanager.user;
 
+import com.exm.expensemanager.handler.exceptions.WrongAgeException;
 import com.exm.expensemanager.user.dto.UserRequestDTO;
 import com.exm.expensemanager.user.dto.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -17,12 +15,12 @@ public class UserService {
 
     public UserResponseDTO createUser(UserRequestDTO request)
     {
-        if(0 >= request.age()) throw new RuntimeException();
+        if(0 >= request.age()) throw new WrongAgeException();
 
         var savedUser = this.userRepository.save(
                 this.userMapper.toEntity(request)
         );
 
-        return this.userMapper.toDTO(savedUser);
+        return this.userMapper.toResponseDTO(savedUser);
     }
 }
