@@ -34,12 +34,12 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @NotEmpty
+    @NotNull
     @Column(name = "age", nullable = false)
     @Positive
     private int age;
 
-    @NotEmpty
+    @NotNull
     @Column(name = "currency", nullable = false, length = 3)
     @Enumerated(EnumType.STRING)
     private Currency currency;

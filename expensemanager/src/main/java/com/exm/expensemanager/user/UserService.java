@@ -1,10 +1,18 @@
 package com.exm.expensemanager.user;
 
+import com.exm.expensemanager.common.Util;
+import com.exm.expensemanager.common.enums.Currency;
+import com.exm.expensemanager.handler.exceptions.UserNotCreated;
+import com.exm.expensemanager.handler.exceptions.UserNotExists;
 import com.exm.expensemanager.handler.exceptions.WrongAgeException;
+import com.exm.expensemanager.handler.exceptions.WrongCurrencyException;
 import com.exm.expensemanager.user.dto.UserRequestDTO;
 import com.exm.expensemanager.user.dto.UserResponseDTO;
+import com.exm.expensemanager.user.dto.UserUpdateRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.yaml.snakeyaml.util.EnumUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -12,15 +20,58 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final Util util;
 
     public UserResponseDTO createUser(UserRequestDTO request)
     {
-        if(0 >= request.age()) throw new WrongAgeException();
+        if (0 >= request.age()) throw new WrongAgeException();
 
-        var savedUser = this.userRepository.save(
-                this.userMapper.toEntity(request)
-        );
+        User savedUser;
+
+        if(!util.doesCurrencyContains(String.valueOf(request.currency())))
+        {
+            throw new WrongCurrencyException();
+        }
+
+        try {
+            savedUser = this.userRepository.save(this.userMapper.toEntity(request));
+        } catch (Exception e) {
+            throw new UserNotCreated();
+        }
+        return this.userMapper.toResponseDTO(savedUser);
+    }
+
+    public UserResponseDTO updateUser(UserUpdateRequestDTO request)
+    {
+        var id = this.util.getCurrentUserId();
+        User user = this.userRepository.findById(id).orElseThrow(UserNotExists::new);
+
+        if(request.name() != null) user.setName(request.name());
+        if(request.lastName() != null) user.setLastName(request.lastName());
+        if(request.age() != null)
+            if(request.age() <= 0)
+            {
+                throw new WrongAgeException();
+            }
+        else { user.setAge(request.age()); }
+        if(request.currency() != null)
+        {
+            if(util.doesCurrencyContains(String.valueOf(request.currency())))
+            {
+                user.setCurrency(Currency.valueOf(request.currency()));
+            }
+            else
+            {
+                throw new WrongCurrencyException();
+            }
+        }
+
+        var savedUser = this.userRepository.save(user);
 
         return this.userMapper.toResponseDTO(savedUser);
+    }
+
+    public getCurrencyInformation(){
+
     }
 }

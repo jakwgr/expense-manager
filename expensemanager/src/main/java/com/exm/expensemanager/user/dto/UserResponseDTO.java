@@ -6,7 +6,7 @@ public record UserResponseDTO(
         int id,
         String name,
         String lastName,
-        int age,
+        Integer age,
         Currency currency
 ) {
 }
