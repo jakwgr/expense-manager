@@ -1,8 +1,6 @@
 package com.exm.expensemanager.common;
 
-import lombok.*;
-
-public record CurrencyInfo (
+public record CurrencyInfoDTO(
     String code,
     String name,
     String symbol,

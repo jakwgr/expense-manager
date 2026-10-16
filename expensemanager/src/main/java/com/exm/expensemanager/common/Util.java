@@ -1,7 +1,7 @@
 package com.exm.expensemanager.common;
 
 import com.exm.expensemanager.common.enums.Currency;
-import com.exm.expensemanager.handler.exceptions.UserNotExists;
+import com.exm.expensemanager.handler.exceptions.UserNotExistsException;
 import com.exm.expensemanager.handler.exceptions.WrongCurrencyException;
 import com.exm.expensemanager.user.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +20,7 @@ import java.util.Map;
 public class Util {
 
     private final UserRepository userRepository;
-    private final Map<String, CurrencyInfo> currencyInfoCache = new HashMap<>();
+    private final Map<String, CurrencyInfoDTO> currencyInfoCache = new HashMap<>();
 
     @PostConstruct
     public void initCurrencyData()
@@ -39,13 +38,13 @@ public class Util {
                 String code = item.path("code").asText();
                 if(!code.isBlank())
                 {
-                    CurrencyInfo currencyInfo = new CurrencyInfo(
+                    CurrencyInfoDTO currencyInfoDTO = new CurrencyInfoDTO(
                             code,
                             item.path("name").asText(),
                             item.path("symbol").asText(),
                             item.path("decimal_digits").asInt()
                     );
-                    currencyInfoCache.put(code.toUpperCase(), currencyInfo);
+                    currencyInfoCache.put(code.toUpperCase(), currencyInfoDTO);
                 }
             }
         } catch (IOException e) {
@@ -55,7 +54,7 @@ public class Util {
 
     public int getCurrentUserId()
     {
-        var activeUser = this.userRepository.findTopByOrderByIdDesc().orElseThrow(UserNotExists::new);
+        var activeUser = this.userRepository.findTopByOrderByIdDesc().orElseThrow(UserNotExistsException::new);
 
         return activeUser.getId();
     }
@@ -72,20 +71,17 @@ public class Util {
         return false;
     }
 
-    public CurrencyInfo getCurrencyInformation(String value)
+    public CurrencyInfoDTO getCurrencyInformation(String value)
     {
         if(value == null || value.isBlank()) throw new RuntimeException("Currency value cannot be empty!");
         if(!doesCurrencyContains(value)) throw new WrongCurrencyException();
-
-        System.out.println(value);
-        System.out.println(currencyInfoCache.get(value.toUpperCase()));
         return currencyInfoCache.get(value.toUpperCase());
     }
 
-    public CurrencyInfo getUserCurrencyInfo()
+    public CurrencyInfoDTO getUserCurrencyInfo()
     {
         int userId = this.getCurrentUserId();
-        String value = String.valueOf(this.userRepository.findById(userId).orElseThrow(UserNotExists::new).getCurrency());
+        String value = String.valueOf(this.userRepository.findById(userId).orElseThrow(UserNotExistsException::new).getCurrency());
 
         return this.getCurrencyInformation(value);
     }

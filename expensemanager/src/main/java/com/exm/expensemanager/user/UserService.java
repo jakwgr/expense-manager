@@ -1,10 +1,10 @@
 package com.exm.expensemanager.user;
 
-import com.exm.expensemanager.common.CurrencyInfo;
+import com.exm.expensemanager.common.CurrencyInfoDTO;
 import com.exm.expensemanager.common.Util;
 import com.exm.expensemanager.common.enums.Currency;
-import com.exm.expensemanager.handler.exceptions.UserNotCreated;
-import com.exm.expensemanager.handler.exceptions.UserNotExists;
+import com.exm.expensemanager.handler.exceptions.UserNotCreatedException;
+import com.exm.expensemanager.handler.exceptions.UserNotExistsException;
 import com.exm.expensemanager.handler.exceptions.WrongAgeException;
 import com.exm.expensemanager.handler.exceptions.WrongCurrencyException;
 import com.exm.expensemanager.user.dto.UserRequestDTO;
@@ -12,8 +12,6 @@ import com.exm.expensemanager.user.dto.UserResponseDTO;
 import com.exm.expensemanager.user.dto.UserUpdateRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.yaml.snakeyaml.util.EnumUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -34,10 +32,13 @@ public class UserService {
             throw new WrongCurrencyException();
         }
 
+        UserRequestDTO requestUP = new UserRequestDTO(
+                request.name(), request.lastName(), request.age(), request.currency().toUpperCase());
+
         try {
-            savedUser = this.userRepository.save(this.userMapper.toEntity(request));
+            savedUser = this.userRepository.save(this.userMapper.toEntity(requestUP));
         } catch (Exception e) {
-            throw new UserNotCreated();
+            throw new UserNotCreatedException();
         }
         return this.userMapper.toResponseDTO(savedUser);
     }
@@ -45,7 +46,7 @@ public class UserService {
     public UserResponseDTO updateUser(UserUpdateRequestDTO request)
     {
         var id = this.util.getCurrentUserId();
-        User user = this.userRepository.findById(id).orElseThrow(UserNotExists::new);
+        User user = this.userRepository.findById(id).orElseThrow(UserNotExistsException::new);
 
         if(request.name() != null) user.setName(request.name());
         if(request.lastName() != null) user.setLastName(request.lastName());
@@ -59,7 +60,7 @@ public class UserService {
         {
             if(util.doesCurrencyContains(String.valueOf(request.currency())))
             {
-                user.setCurrency(Currency.valueOf(request.currency()));
+                user.setCurrency(Currency.valueOf(request.currency().toUpperCase()));
             }
             else
             {
@@ -72,7 +73,7 @@ public class UserService {
         return this.userMapper.toResponseDTO(savedUser);
     }
 
-    public CurrencyInfo getUserCurrencyInformation(){
+    public CurrencyInfoDTO getUserCurrencyInformation(){
         return this.util.getUserCurrencyInfo();
     }
 }

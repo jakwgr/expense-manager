@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary;
 @Entity
 @Getter
 @Setter
-@Table(name = "User")
+@Table(name = "user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,4 +43,11 @@ public class User {
     @Column(name = "currency", nullable = false, length = 3)
     @Enumerated(EnumType.STRING)
     private Currency currency;
+
+    public User(String name, String lastName, int age, Currency currency) {
+        this.name = name;
+        this.lastName = lastName;
+        this.age = age;
+        this.currency = currency;
+    }
 }

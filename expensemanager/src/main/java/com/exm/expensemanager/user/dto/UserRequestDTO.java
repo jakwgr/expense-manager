@@ -5,16 +5,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record UserRequestDTO(
-        @NotBlank(message = "Name is required")
+        @NotBlank(message = "Field \"name\" is required")
         String name,
 
-        @NotBlank(message = "Last name is required")
+        @NotBlank(message = "Field \"last name\" is required")
         String lastName,
 
-        @NotNull(message = "Age is required")
+        @NotNull(message = "Field \"age\" is required")
         Integer age,
 
-        @NotBlank(message = "Currency is required")
+        @NotBlank(message = "Field \"currency\" is required")
         String currency
 ) {
 }

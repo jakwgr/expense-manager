@@ -1,11 +1,10 @@
 package com.exm.expensemanager.user;
 
-import com.exm.expensemanager.common.CurrencyInfo;
+import com.exm.expensemanager.common.CurrencyInfoDTO;
 import com.exm.expensemanager.user.dto.UserRequestDTO;
 import com.exm.expensemanager.user.dto.UserResponseDTO;
 import com.exm.expensemanager.user.dto.UserUpdateRequestDTO;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,9 +37,9 @@ public class UserController {
     }
 
     @GetMapping("/currency")
-    public ResponseEntity<CurrencyInfo> getUserCurrency()
+    public ResponseEntity<CurrencyInfoDTO> getUserCurrency()
     {
-        CurrencyInfo response = userService.getUserCurrencyInformation();
+        CurrencyInfoDTO response = userService.getUserCurrencyInformation();
 
         return ResponseEntity
                 .status(HttpStatus.OK)
