@@ -1,5 +1,6 @@
 package com.exm.expensemanager.user;
 
+import com.exm.expensemanager.common.CurrencyInfo;
 import com.exm.expensemanager.common.Util;
 import com.exm.expensemanager.common.enums.Currency;
 import com.exm.expensemanager.handler.exceptions.UserNotCreated;
@@ -71,7 +72,7 @@ public class UserService {
         return this.userMapper.toResponseDTO(savedUser);
     }
 
-    public getCurrencyInformation(){
-
+    public CurrencyInfo getUserCurrencyInformation(){
+        return this.util.getUserCurrencyInfo();
     }
 }
