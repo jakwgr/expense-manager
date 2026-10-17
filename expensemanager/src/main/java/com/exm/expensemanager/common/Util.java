@@ -1,7 +1,7 @@
 package com.exm.expensemanager.common;
 
 import com.exm.expensemanager.common.enums.Currency;
-import com.exm.expensemanager.handler.exceptions.UserNotExistsException;
+import com.exm.expensemanager.handler.exceptions.user.UserNotExistsException;
 import com.exm.expensemanager.handler.exceptions.WrongCurrencyException;
 import com.exm.expensemanager.user.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,6 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ public class Util {
 
     private final UserRepository userRepository;
     private final Map<String, CurrencyInfoDTO> currencyInfoCache = new HashMap<>();
+    private final Object[] boolVariables = new Object[4];
 
     @PostConstruct
     public void initCurrencyData()
@@ -49,6 +51,17 @@ public class Util {
             }
         } catch (IOException e) {
             throw new RuntimeException("Cannot load currency.json file");
+        }
+    }
+
+    @PostConstruct
+    public void initBoolVariables()
+    {
+        try {
+            boolVariables[0] = "TRUE";
+            boolVariables[1] = "FALSE";
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Cannot load bool variables array");
         }
     }
 
@@ -84,5 +97,10 @@ public class Util {
         String value = String.valueOf(this.userRepository.findById(userId).orElseThrow(UserNotExistsException::new).getCurrency());
 
         return this.getCurrencyInformation(value);
+    }
+
+    public boolean isBoolCorrect(String value)
+    {
+        return Arrays.asList(boolVariables).contains(value.toUpperCase());
     }
 }

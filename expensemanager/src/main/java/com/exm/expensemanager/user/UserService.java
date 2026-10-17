@@ -3,10 +3,11 @@ package com.exm.expensemanager.user;
 import com.exm.expensemanager.common.CurrencyInfoDTO;
 import com.exm.expensemanager.common.Util;
 import com.exm.expensemanager.common.enums.Currency;
-import com.exm.expensemanager.handler.exceptions.UserNotCreatedException;
-import com.exm.expensemanager.handler.exceptions.UserNotExistsException;
+import com.exm.expensemanager.handler.exceptions.user.UserNotCreatedException;
+import com.exm.expensemanager.handler.exceptions.user.UserNotExistsException;
 import com.exm.expensemanager.handler.exceptions.WrongAgeException;
 import com.exm.expensemanager.handler.exceptions.WrongCurrencyException;
+import com.exm.expensemanager.handler.exceptions.user.UserNotUpdatedException;
 import com.exm.expensemanager.user.dto.UserRequestDTO;
 import com.exm.expensemanager.user.dto.UserResponseDTO;
 import com.exm.expensemanager.user.dto.UserUpdateRequestDTO;
@@ -47,6 +48,7 @@ public class UserService {
     {
         var id = this.util.getCurrentUserId();
         User user = this.userRepository.findById(id).orElseThrow(UserNotExistsException::new);
+        User updatedUser;
 
         if(request.name() != null) user.setName(request.name());
         if(request.lastName() != null) user.setLastName(request.lastName());
@@ -68,9 +70,13 @@ public class UserService {
             }
         }
 
-        var savedUser = this.userRepository.save(user);
+        try{
+            updatedUser =  this.userRepository.save(user);
+        } catch (RuntimeException e) {
+            throw new UserNotUpdatedException();
+        }
 
-        return this.userMapper.toResponseDTO(savedUser);
+        return this.userMapper.toResponseDTO(updatedUser);
     }
 
     public CurrencyInfoDTO getUserCurrencyInformation(){

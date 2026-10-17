@@ -1,4 +1,4 @@
-package com.exm.expensemanager.handler.exceptions;
+package com.exm.expensemanager.handler.exceptions.user;
 
 import com.exm.expensemanager.handler.CustomException;
 import org.springframework.http.HttpStatus;

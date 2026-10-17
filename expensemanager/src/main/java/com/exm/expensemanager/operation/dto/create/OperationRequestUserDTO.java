@@ -1,13 +1,15 @@
-package com.exm.expensemanager.operation.dto;
+package com.exm.expensemanager.operation.dto.create;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.*;
-import org.springframework.format.annotation.DateTimeFormat;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record OperationRequestDTO(
+public record OperationRequestUserDTO(
         @NotBlank(message = "Field \"title\" is required")
         String title,
 
@@ -27,9 +29,6 @@ public record OperationRequestDTO(
         String type,
 
         @NotNull(message = "Field \"included\" is required")
-        Boolean included,
-
-        @NotBlank(message = "Field \"operation type\" is required")
-        String operationType
+        String included
 ) {
 }

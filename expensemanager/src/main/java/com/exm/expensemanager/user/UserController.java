@@ -27,7 +27,7 @@ public class UserController {
     }
 
     @PutMapping()
-    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody UserUpdateRequestDTO request)
+    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody @Valid UserUpdateRequestDTO request)
     {
         UserResponseDTO response = userService.updateUser(request);
 
