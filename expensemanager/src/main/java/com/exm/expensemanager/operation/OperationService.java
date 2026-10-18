@@ -24,9 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.management.OperationsException;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -158,6 +158,18 @@ public class OperationService {
         return this.operationMapper.toResponseDTO(operation);
     }
 
+    public List<OperationResponseDTO> getAllOperations()
+    {
+        return this.operationRepository.findAll()
+                .stream()
+                .map(operationMapper::toResponseDTO)
+                .toList();
+    }
+
+    public List<Operation> getOperationsForReport(LocalDate start, LocalDate end)
+    {
+      return this.operationRepository.findAllOperationsBetweenDatesOrderByDateAsc(start, end);
+    };
 
     public Page<OperationResponseDTO> getOperations(Pageable pageable, OperationFilterDTO filter)
     {

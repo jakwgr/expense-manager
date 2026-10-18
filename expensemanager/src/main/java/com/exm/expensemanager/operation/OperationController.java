@@ -1,6 +1,7 @@
 package com.exm.expensemanager.operation;
 
 import com.exm.expensemanager.operation.dto.OperationFilterDTO;
+import com.exm.expensemanager.operation.dto.OperationReportDTO;
 import com.exm.expensemanager.operation.dto.create.OperationRequestUserDTO;
 import com.exm.expensemanager.operation.dto.OperationResponseDTO;
 import com.exm.expensemanager.operation.dto.update.OperationIncludeUpdateRequestDTO;
@@ -11,15 +12,19 @@ import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/operation")
 public class OperationController {
     private final OperationService operationService;
+    private final OperationExcelService operationExcelService;
 
     @PostMapping("/expense")
     public ResponseEntity<OperationResponseDTO> createExpense(@RequestBody @Valid OperationRequestUserDTO request)
@@ -81,8 +86,18 @@ public class OperationController {
                 .body(response);
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<OperationResponseDTO>> getAllOperations()
+    {
+        List<OperationResponseDTO> response = this.operationService.getAllOperations();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
     @GetMapping()
-    ResponseEntity<Page<OperationResponseDTO>> getOperations(@ModelAttribute OperationFilterDTO request, Pageable page)
+    public ResponseEntity<Page<OperationResponseDTO>> getOperations(@ModelAttribute OperationFilterDTO request, Pageable page)
     {
         Page<OperationResponseDTO> response = this.operationService.getOperations(page, request);
 
@@ -92,7 +107,7 @@ public class OperationController {
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<Void> deleteOperation(@PathVariable int id)
+    public ResponseEntity<Void> deleteOperation(@PathVariable int id)
     {
         this.operationService.deleteOperation(id);
 
@@ -109,5 +124,22 @@ public class OperationController {
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .body(null);
+    }
+
+    @PostMapping("report/download")
+    public ResponseEntity<byte[]> downloadExcel(@RequestBody @Valid OperationReportDTO report)
+    {
+        byte[] excelBytes = operationExcelService.generateExcel(report);
+
+        String fileName = String.format("Generated_report_from_%s_to_%s.xlsx",
+                report.start(),
+                report.end());
+
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(fileName).build().toString())
+                .body(excelBytes);
     }
 }
