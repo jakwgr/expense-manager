@@ -1,5 +1,6 @@
 package com.exm.expensemanager.operation;
 
+import com.exm.expensemanager.operation.dto.OperationFilterDTO;
 import com.exm.expensemanager.operation.dto.create.OperationRequestUserDTO;
 import com.exm.expensemanager.operation.dto.OperationResponseDTO;
 import com.exm.expensemanager.operation.dto.update.OperationIncludeUpdateRequestDTO;
@@ -8,6 +9,8 @@ import com.exm.expensemanager.operation.dto.update.OperationUpdateRequestDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -69,7 +72,7 @@ public class OperationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OperationResponseDTO> getOperationById(@PathVariable int id)
+    public ResponseEntity<OperationResponseDTO> getOperationById(@PathVariable Integer id)
     {
         OperationResponseDTO response = this.operationService.getOperationById(id);
 
@@ -78,4 +81,33 @@ public class OperationController {
                 .body(response);
     }
 
+    @GetMapping()
+    ResponseEntity<Page<OperationResponseDTO>> getOperations(@ModelAttribute OperationFilterDTO request, Pageable page)
+    {
+        Page<OperationResponseDTO> response = this.operationService.getOperations(page, request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<Void> deleteOperation(@PathVariable int id)
+    {
+        this.operationService.deleteOperation(id);
+
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(null);
+    }
+
+    @DeleteMapping("/all")
+    ResponseEntity<Void> deleteAllOperations()
+    {
+        this.operationService.deleteAllOperations();
+
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(null);
+    }
 }

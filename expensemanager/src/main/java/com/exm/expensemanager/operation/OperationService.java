@@ -5,19 +5,26 @@ import com.exm.expensemanager.common.enums.Currency;
 import com.exm.expensemanager.common.enums.OperationType;
 import com.exm.expensemanager.handler.exceptions.WrongOperationIncludeException;
 import com.exm.expensemanager.handler.exceptions.operation.OperationNotCreatedException;
+import com.exm.expensemanager.handler.exceptions.operation.OperationNotDeletedException;
 import com.exm.expensemanager.handler.exceptions.operation.OperationNotExistsException;
 import com.exm.expensemanager.handler.exceptions.WrongCurrencyException;
 import com.exm.expensemanager.handler.exceptions.WrongOperationTypeException;
 import com.exm.expensemanager.handler.exceptions.operation.OperationNotUpdatedException;
+import com.exm.expensemanager.operation.dto.OperationFilterDTO;
 import com.exm.expensemanager.operation.dto.create.OperationRequestDTO;
 import com.exm.expensemanager.operation.dto.create.OperationRequestUserDTO;
 import com.exm.expensemanager.operation.dto.OperationResponseDTO;
 import com.exm.expensemanager.operation.dto.update.OperationIncludeUpdateRequestDTO;
 import com.exm.expensemanager.operation.dto.update.OperationTypeUpdateRequestDTO;
 import com.exm.expensemanager.operation.dto.update.OperationUpdateRequestDTO;
+import com.exm.expensemanager.operation.specification.OperationSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.management.OperationsException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -143,11 +150,44 @@ public class OperationService {
         return this.operationMapper.toResponseDTO(updatedOperation);
     }
 
-    public OperationResponseDTO getOperationById(int id)
+    public OperationResponseDTO getOperationById(Integer id)
     {
-        Optional<Operation> operation = this.operationRepository.findById(id);
-
-        return operation.map(this.operationMapper::toResponseDTO)
+        Operation operation = this.operationRepository.findById(id)
                 .orElseThrow(OperationNotExistsException::new);
+
+        return this.operationMapper.toResponseDTO(operation);
+    }
+
+
+    public Page<OperationResponseDTO> getOperations(Pageable pageable, OperationFilterDTO filter)
+    {
+        Specification<Operation> specification = OperationSpecification.buildSpecification(filter);
+
+        return this.operationRepository.findAll(specification, pageable)
+                .map(this.operationMapper::toResponseDTO);
+    }
+
+    public void deleteOperation(Integer id)
+    {
+        Operation operation = this.operationRepository.findById(id)
+                .orElseThrow(OperationNotExistsException::new);
+        try{
+            this.operationRepository.deleteById(id);
+        } catch (RuntimeException e) {
+            throw new OperationNotDeletedException(null);
+        }
+
+        return;
+    }
+
+    public void deleteAllOperations()
+    {
+        try{
+            this.operationRepository.deleteAll();
+        } catch (RuntimeException e) {
+            throw new OperationNotDeletedException("ALL");
+        }
+
+        return;
     }
 }
