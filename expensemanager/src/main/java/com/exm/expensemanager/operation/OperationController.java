@@ -131,7 +131,7 @@ public class OperationController {
     {
         byte[] excelBytes = operationExcelService.generateExcel(report);
 
-        String fileName = String.format("Generated_report_from_%s_to_%s.xlsx",
+        String fileName = String.format("GENERATED_REPORT_FROM_%s_TO_%s.xlsx",
                 report.start(),
                 report.end());
 

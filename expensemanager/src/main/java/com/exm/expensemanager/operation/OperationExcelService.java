@@ -34,6 +34,10 @@ public class OperationExcelService {
                     .map(operationMapper::toResponseDTO)
                     .toList();
 
+            System.out.println(operationService.sumAfterExchange(operationService.sumOperationsForReport(operations)));
+
+            System.out.println(operationService.sumOperationsForReport(operations));
+
             Workbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = (XSSFSheet) workbook.createSheet();
 
@@ -62,7 +66,7 @@ public class OperationExcelService {
 
             Row titleRow = sheet.createRow(0);
             XSSFCell dateTitle = (XSSFCell) titleRow.createCell(0);
-            dateTitle.setCellValue(String.format("REPORT FROM %s - %s", start, end));
+            dateTitle.setCellValue(String.format("REPORT FROM %s - %s (READONLY)", start, end));
             dateTitle.setCellStyle(dateCellStyle);
             dateTitle.setCellStyle(titleStyle);
 

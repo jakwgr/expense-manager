@@ -1,8 +1,11 @@
 package com.exm.expensemanager.operation;
 
+import com.exm.expensemanager.common.CurrencyInfoDTO;
+import com.exm.expensemanager.nbp.NbpUtil;
 import com.exm.expensemanager.common.Util;
 import com.exm.expensemanager.common.enums.Currency;
 import com.exm.expensemanager.common.enums.OperationType;
+import com.exm.expensemanager.handler.exceptions.ExchangeOperationSumException;
 import com.exm.expensemanager.handler.exceptions.WrongOperationIncludeException;
 import com.exm.expensemanager.handler.exceptions.operation.OperationNotCreatedException;
 import com.exm.expensemanager.handler.exceptions.operation.OperationNotDeletedException;
@@ -24,8 +27,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -34,6 +41,7 @@ public class OperationService {
     private final OperationRepository operationRepository;
     private final OperationMapper operationMapper;
     private final Util util;
+    private final NbpUtil nbpUtil;
 
     public OperationResponseDTO createOperation(OperationRequestUserDTO request, String operationType)
     {
@@ -201,5 +209,41 @@ public class OperationService {
         }
 
         return;
+    }
+
+    public Map<String, BigDecimal> sumOperationsForReport(List<OperationResponseDTO> operations)
+    {
+        Map<String,BigDecimal> sum = new HashMap<>();
+
+        for(OperationResponseDTO operation : operations)
+        {
+            if(operation.included())
+            {
+                sum.merge(operation.currency(), util.convertExpenseOrIncome(operation), BigDecimal::add);
+            }
+        }
+        if(sum.isEmpty()) sum.put("NONE", BigDecimal.valueOf(0.0));
+
+        return sum;
+    }
+
+    public Map<String, BigDecimal> sumAfterExchange(Map<String, BigDecimal>operationSummary)
+    {
+        Map<String, BigDecimal> afterExchange = new HashMap<>();
+        Map<String, BigDecimal> exchangeRate;
+        try {
+            BigDecimal rate;
+            for (String key : operationSummary.keySet()) {
+                CurrencyInfoDTO currencyInfo = util.getCurrencyInformation(key);
+
+                exchangeRate = nbpUtil.getAverageExchangeRate(key);
+                rate = exchangeRate.get(key);
+                afterExchange.put(key, rate.multiply(operationSummary.get(key)).setScale(currencyInfo.decimal_digits(), RoundingMode.HALF_UP));
+            }
+        } catch (Exception e) {
+            throw new ExchangeOperationSumException();
+        }
+
+        return afterExchange;
     }
 }

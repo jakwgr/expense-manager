@@ -1,8 +1,11 @@
 package com.exm.expensemanager.common;
 
 import com.exm.expensemanager.common.enums.Currency;
+import com.exm.expensemanager.common.enums.OperationType;
 import com.exm.expensemanager.handler.exceptions.user.UserNotExistsException;
 import com.exm.expensemanager.handler.exceptions.WrongCurrencyException;
+import com.exm.expensemanager.operation.Operation;
+import com.exm.expensemanager.operation.dto.OperationResponseDTO;
 import com.exm.expensemanager.user.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +15,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,5 +107,19 @@ public class Util {
     public boolean isBoolCorrect(String value)
     {
         return Arrays.asList(boolVariables).contains(value.toUpperCase());
+    }
+
+    public BigDecimal convertExpenseOrIncome(OperationResponseDTO operation)
+    {
+        OperationType operationType = OperationType.valueOf(operation.operationType());
+        CurrencyInfoDTO currencyInfo = getCurrencyInformation(operation.currency());
+
+        BigDecimal amount = operation.amount().setScale(currencyInfo.decimal_digits(), RoundingMode.HALF_UP);
+
+        if(operationType.equals(OperationType.EXPENSE))
+        {
+            return amount.abs().negate();
+        }
+        return amount.abs();
     }
 }
