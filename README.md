@@ -32,7 +32,7 @@ Ensure you have the following installed on your machine:
 ### Installation & Execution
 
 1. **Clone the repository:**
-   git clone [https://github.com/your-username/expense-manager.git](https://github.com/your-username/expense-manager.git)
+   git clone [https://github.com/jakwgr/expense-manager.git](https://github.com/jakwgr/expense-manager.git)
    cd expense-manager
 
 2. **Build the project:**
