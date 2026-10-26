@@ -227,21 +227,31 @@ public class OperationService {
         return sum;
     }
 
-    public Map<String, BigDecimal> sumAfterExchange(Map<String, BigDecimal>operationSummary)
+    public Map<String, BigDecimal> sumAfterExchange(Map<String, BigDecimal> operationSummary)
     {
         Map<String, BigDecimal> afterExchange = new HashMap<>();
-        Map<String, BigDecimal> exchangeRate;
-        try {
-            BigDecimal rate;
-            for (String key : operationSummary.keySet()) {
-                CurrencyInfoDTO currencyInfo = util.getCurrencyInformation(key);
 
-                exchangeRate = nbpUtil.getAverageExchangeRate(key);
-                rate = exchangeRate.get(key);
-                afterExchange.put(key, rate.multiply(operationSummary.get(key)).setScale(currencyInfo.decimal_digits(), RoundingMode.HALF_UP));
+        if (operationSummary == null || operationSummary.isEmpty()) {
+            return afterExchange;
+        }
+
+        for (Map.Entry<String, BigDecimal> entry : operationSummary.entrySet()) {
+            String key = entry.getKey();
+            BigDecimal amount = entry.getValue() == null ? BigDecimal.ZERO : entry.getValue();
+
+            if ("NONE".equalsIgnoreCase(key)) {
+                afterExchange.put("NONE", BigDecimal.ZERO);
+                continue;
             }
-        } catch (Exception e) {
-            throw new ExchangeOperationSumException();
+
+            CurrencyInfoDTO currencyInfo = util.getCurrencyInformation(key);
+            Map<String, BigDecimal> exchangeRate = nbpUtil.getAverageExchangeRate(key);
+
+            BigDecimal rate = (exchangeRate != null && exchangeRate.containsKey(key.toUpperCase()))
+                    ? exchangeRate.get(key.toUpperCase())
+                    : BigDecimal.ONE;
+
+            afterExchange.put(key, rate.multiply(amount).setScale(currencyInfo.decimal_digits(), RoundingMode.HALF_UP));
         }
 
         return afterExchange;

@@ -2,7 +2,6 @@ package com.exm.expensemanager.common;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
-import org.springframework.beans.factory.BeanRegistry;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 

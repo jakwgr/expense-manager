@@ -7,12 +7,9 @@ import java.util.Objects;
 
 public class OperationNotDeletedException extends CustomException {
     public OperationNotDeletedException(String text) {
-        String exText;
-        if(Objects.equals(text, "ALL"))
-        {
-            exText = "These operations were not deleted!";
-        }
-        exText = "This operation was not deleted!";
-        super(exText, HttpStatus.BAD_REQUEST);
+        super(Objects.equals(text, "ALL")
+                        ? "These operations were not deleted!"
+                        : "This operation was not deleted!",
+                HttpStatus.BAD_REQUEST);
     }
 }

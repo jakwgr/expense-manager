@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 
 public class ExchangeOperationSumException extends CustomException {
     public ExchangeOperationSumException() {
-        super("Could not exchange the money!", HttpStatus.UNPROCESSABLE_CONTENT);
+        super("Could not exchange the money!", HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

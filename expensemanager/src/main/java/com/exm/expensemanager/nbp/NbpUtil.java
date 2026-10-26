@@ -24,7 +24,10 @@ public class NbpUtil {
 
     public Map<String, BigDecimal> getAverageExchangeRate(String code)
     {
-        if(code == null || code.isBlank()) throw new NbpCurrencyException();
+//        if(code == null || code.isBlank()) throw new NbpCurrencyException();
+        if(code == null || code.isBlank()) {
+                return Map.of("UNKNOWN", BigDecimal.ONE);
+        }
 
         Map<String, BigDecimal> exchangeRate = new HashMap<>();
         code = code.toLowerCase();
@@ -52,10 +55,9 @@ public class NbpUtil {
 
                 return exchangeRate;
             }
-            else if(response.statusCode() == 404) throw new NbpCurrencyException();
-            else throw new NbpApiConnectionException();
         } catch (IOException | InterruptedException e) {
-            throw new NbpApiConnectionException();
         }
+        exchangeRate.put(code.toUpperCase(), BigDecimal.ONE);
+        return exchangeRate;
     }
 }

@@ -1,12 +1,10 @@
 package com.exm.expensemanager.nbp;
 
 import com.exm.expensemanager.common.Util;
-import com.exm.expensemanager.handler.exceptions.ExchangeOperationSumException;
-import com.exm.expensemanager.handler.exceptions.NbpCurrencyException;
 import com.exm.expensemanager.nbp.dto.ExchangeResponseDTO;
 import com.exm.expensemanager.nbp.dto.SummaryResultDTO;
+import com.exm.expensemanager.user.UserService;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.hpsf.Decimal;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,22 +17,22 @@ import java.util.Map;
 public class CurrencyExchangeService {
     private final NbpUtil nbpUtil;
     private final Util util;
+    private final UserService userService;
 
     public ExchangeResponseDTO exchangeCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) throw new ExchangeOperationSumException();
+        BigDecimal safeAmount = (amount == null) ? BigDecimal.ZERO : amount;
 
-        String fromUpper = fromCurrency.trim().toUpperCase();
-        String toUpper = toCurrency.trim().toUpperCase();
+        String fromUpper = (fromCurrency == null || fromCurrency.isBlank()) ? userService.getUserCurrencyInformation().code() : fromCurrency.trim().toUpperCase();
+        String toUpper = (toCurrency == null || toCurrency.isBlank()) ? userService.getUserCurrencyInformation().code() : toCurrency.trim().toUpperCase();
 
-        if(fromUpper.equals(toUpper))
-        {
+        int targetDecimals = util.getCurrencyInformation(toUpper).decimal_digits();
+
+        if (fromUpper.equals(toUpper) || safeAmount.compareTo(BigDecimal.ZERO) == 0) {
             return new ExchangeResponseDTO(
                     fromUpper,
                     toUpper,
-                    amount,
-                    amount.setScale(
-                            util.getCurrencyInformation(toUpper).decimal_digits()
-                            , RoundingMode.HALF_UP),
+                    safeAmount,
+                    safeAmount.setScale(targetDecimals, RoundingMode.HALF_UP),
                     BigDecimal.ONE,
                     BigDecimal.ONE,
                     BigDecimal.ONE
@@ -44,19 +42,25 @@ public class CurrencyExchangeService {
         Map<String, BigDecimal> srcRateMap = nbpUtil.getAverageExchangeRate(fromUpper);
         Map<String, BigDecimal> dstRateMap = nbpUtil.getAverageExchangeRate(toUpper);
 
-        BigDecimal srcRate = srcRateMap.get(fromUpper);
-        BigDecimal dstRate = dstRateMap.get(toUpper);
+        BigDecimal srcRate = (srcRateMap != null && srcRateMap.containsKey(fromUpper))
+                ? srcRateMap.get(fromUpper)
+                : BigDecimal.ONE;
+
+        BigDecimal dstRate = (dstRateMap != null && dstRateMap.containsKey(toUpper))
+                ? dstRateMap.get(toUpper)
+                : BigDecimal.ONE;
 
         BigDecimal effectiveRate = srcRate.divide(dstRate, 4, RoundingMode.HALF_UP);
 
-        BigDecimal exchangedAmount = amount.multiply(effectiveRate).setScale(
-                util.getCurrencyInformation(toUpper).decimal_digits()
-                , RoundingMode.HALF_UP);
+        BigDecimal exchangedAmount = safeAmount.multiply(effectiveRate).setScale(
+                targetDecimals,
+                RoundingMode.HALF_UP
+        );
 
         return new ExchangeResponseDTO(
                 fromUpper,
                 toUpper,
-                amount,
+                safeAmount,
                 exchangedAmount,
                 effectiveRate,
                 srcRate,
@@ -65,21 +69,21 @@ public class CurrencyExchangeService {
     }
 
     public SummaryResultDTO calculateTotalSummary(Map<String, BigDecimal> operationSummary, String baseCurrency) {
-        if (operationSummary == null || operationSummary.isEmpty()) {
-            return new SummaryResultDTO(baseCurrency, Map.of(), Map.of(), Map.of(), BigDecimal.ZERO);
-        }
+        String targetCurrency = (baseCurrency == null || baseCurrency.isBlank()) ? userService.getUserCurrencyInformation().code() : baseCurrency.trim().toUpperCase();
 
-        String targetCurrency = baseCurrency.trim().toUpperCase();
+        if (operationSummary == null || operationSummary.isEmpty()) {
+            return new SummaryResultDTO(targetCurrency, Map.of(), Map.of(), Map.of(), BigDecimal.ZERO);
+        }
 
         Map<String, BigDecimal> convertedAmounts = new HashMap<>();
         Map<String, BigDecimal> rates = new HashMap<>();
         BigDecimal totalSum = BigDecimal.ZERO;
 
         for (Map.Entry<String, BigDecimal> entry : operationSummary.entrySet()) {
-            String currency = entry.getKey().trim().toUpperCase();
-            BigDecimal amount = entry.getValue();
+            String currency = entry.getKey() == null ? userService.getUserCurrencyInformation().code() : entry.getKey().trim().toUpperCase();
+            BigDecimal amount = entry.getValue() == null ? BigDecimal.ZERO : entry.getValue();
 
-            if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
+            if (amount.compareTo(BigDecimal.ZERO) == 0) {
                 convertedAmounts.put(currency, BigDecimal.ZERO);
                 rates.put(currency, BigDecimal.ONE);
                 continue;
